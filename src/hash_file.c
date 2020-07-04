@@ -6,12 +6,12 @@
 #include "hash_file.h"
 #define MAX_OPEN_FILES 20
 
-int HashFunction(char *key,int buckets){
+int HashFunction(char *key){
 	int sum=0;
 	for(int i=0;i<strlen(key);i++){
 		sum += key[i];
 	}
-	return sum % buckets;
+	return sum % BUCKETS_NUM;
 }
 
 HT_ErrorCode HT_Init() {
@@ -28,6 +28,7 @@ HT_ErrorCode HT_CreateIndex(const char *filename, int buckets) {
     strcpy(file_info.file_type,"HashFile");
     strcpy(file_info.owner,"DatabaseAdmin");
     file_info.buckets_num=buckets;
+    file_info.record_num = 0;
 
     //Create the meta Data block to save file info
     BF_Block *metadataBlock;
@@ -50,8 +51,8 @@ HT_ErrorCode HT_CreateIndex(const char *filename, int buckets) {
     //Write blocks to the disc
     BF_Block_SetDirty(metadataBlock);
     BF_Block_SetDirty(HashTableBlock);
-    BF_UnpinBlock(metadataBlock);
-    BF_UnpinBlock(HashTableBlock);
+    CALL_OR_EXIT(BF_UnpinBlock(metadataBlock));
+    CALL_OR_EXIT(BF_UnpinBlock(HashTableBlock));
     BF_Block_Destroy(&metadataBlock);
     BF_Block_Destroy(&HashTableBlock);
     CALL_OR_EXIT(BF_CloseFile(file_desc));
@@ -78,6 +79,17 @@ HT_ErrorCode HT_OpenIndex(const char *fileName, int *indexDesc){
 }
 
 HT_ErrorCode HT_CloseFile(int indexDesc) {
+    //Update the metaData block
+    BF_Block *metadataBlock;
+    BF_Block_Init(&metadataBlock);
+    CALL_OR_EXIT(BF_GetBlock(indexDesc,0,metadataBlock));
+    char *metaData = BF_Block_GetData(metadataBlock);
+    memcpy(metaData,&File_Info,sizeof(File_Info));
+    //Unpin and Destroy the block's memory
+    BF_UnpinBlock(metadataBlock);
+    BF_Block_Destroy(&metadataBlock);
+
+    //Update the HashtableBlock
     BF_Block_SetDirty(HashTableBlock);
     CALL_OR_EXIT(BF_UnpinBlock(HashTableBlock));
     BF_Block_Destroy(&HashTableBlock);
@@ -86,8 +98,45 @@ HT_ErrorCode HT_CloseFile(int indexDesc) {
 }
 
 HT_ErrorCode HT_InsertEntry(int indexDesc, Record record) {
-  //insert code here
-  return HT_OK;
+    int total_block,position;
+    //Get the hash index
+    int hash_index = HashFunction(record.name);
+    //Get the block number to insert the record from the HashTable Block
+    char *HashTableData = BF_Block_GetData(HashTableBlock);
+    int block_to_insert_num;
+    memcpy(&block_to_insert_num,&HashTableData[hash_index * sizeof(int)],sizeof(int));
+    
+    if(block_to_insert_num==0){
+        //There is no block for this hash so we create one
+        BF_Block *newBlock;
+        BF_Block_Init(&newBlock);
+        BF_AllocateBlock(indexDesc,newBlock);
+        char *newBlock_data = BF_Block_GetData(newBlock);
+        //Create the block's info
+        Block_Info new_block_info;
+        new_block_info.next_block=-1;    //It's a new block so a chain doesn't exist yet
+        CALL_OR_EXIT(BF_GetBlockCounter(indexDesc,&total_block));
+        new_block_info.block_num = total_block - 1;
+        //Update The HashTableBlock info
+        memcpy(&HashTableData[hash_index * sizeof(int)],&new_block_info.block_num,sizeof(int));
+        //Insert the record in the block
+        position = sizeof(Block_Info);    //To place the record after the block info
+        memcpy(&newBlock_data[position],&record,sizeof(Record));    //Insert the record
+        //Write the block info
+        new_block_info.records=1;
+        memcpy(newBlock_data,&new_block_info,sizeof(Block_Info));
+        //Set Dirty,Unpin and Destroy(free) the memory
+        BF_Block_SetDirty(newBlock);
+        CALL_OR_EXIT(BF_UnpinBlock(newBlock));
+        BF_Block_Destroy(&newBlock);
+        return HT_OK;
+    }
+    else
+    {
+        //If there is space in the block insert else check if chain block exists
+    }
+    
+    return HT_OK;
 }
 
 HT_ErrorCode HT_PrintAllEntries(int indexDesc, int *id) {

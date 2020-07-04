@@ -1,6 +1,8 @@
 #ifndef HASH_FILE_H
 #define HASH_FILE_H
 
+#define BUCKETS_NUM 13  // you can change it if you want
+
 typedef enum HT_ErrorCode {
   HT_OK,
   HT_ERROR
@@ -28,12 +30,13 @@ typedef struct FileInfo{
 	int ht_block_num;
 	int total_blocks;
 	int buckets_num;
+	int record_num;
 }FileInfo;
 
 BF_Block *HashTableBlock;	//Pointer to the HashTable Block
 FileInfo File_Info;	//Keep the info of the file
 
-int HashFunction(char *key,int buckets);
+int HashFunction(char *key);
 
 /*
  * Η συνάρτηση HT_Init χρησιμοποιείται για την αρχικοποίηση κάποιον δομών που μπορεί να χρειαστείτε. 
