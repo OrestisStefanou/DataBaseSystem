@@ -1,8 +1,7 @@
 #ifndef HASH_FILE_H
 #define HASH_FILE_H
-
-#define BUCKETS_NUM 13  // you can change it if you want
-
+#define BUCKETS_NUM 25 // you can change it if you want
+#define MAX_OPEN_FILES 20
 typedef enum HT_ErrorCode {
   HT_OK,
   HT_ERROR
@@ -15,28 +14,25 @@ typedef struct Record {
 	char city[20];
 } Record;
 
-#define CALL_OR_DIE(call)     \
-  {                           \
-    HT_ErrorCode code = call; \
-    if (code != HT_OK) {      \
-      printf("Error\n");      \
-      exit(code);             \
-    }                         \
-  }
+struct info
+{
+  char str[11];
+  int file_desc;
+  int num_of_bucket;
+};
 
-typedef struct FileInfo{
-	char file_type[25];
-	char owner[25];
-	int ht_block_num;
-	int total_blocks;
-	int buckets_num;
-	int record_num;
-}FileInfo;
+typedef struct info Info;
 
-BF_Block *HashTableBlock;	//Pointer to the HashTable Block
-FileInfo File_Info;	//Keep the info of the file
+struct block_info
+{
+  int counter;//how many records we have in the block
+  int Block_Num_of_File;
+  int Next_Block_Num;
+};
 
-int HashFunction(char *key);
+typedef struct block_info Block_Info;
+
+Info *information[MAX_OPEN_FILES];
 
 /*
  * Η συνάρτηση HT_Init χρησιμοποιείται για την αρχικοποίηση κάποιον δομών που μπορεί να χρειαστείτε. 

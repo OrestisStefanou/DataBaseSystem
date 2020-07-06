@@ -26,23 +26,9 @@ typedef enum ReplacementAlgorithm {
   MRU
 } ReplacementAlgorithm;
 
-#define CALL_OR_EXIT(call)     \
-  {                           \
-    BF_ErrorCode code = call; \
-    if (code != BF_OK) {      \
-      BF_PrintError(code);      \
-      exit(code);             \
-    }                         \
-  }
 
 // Δομή Block
 typedef struct BF_Block BF_Block;
-
-typedef struct block_info{
-    int block_num;
-    int next_block;
-    int records;
-}Block_Info;
 
 /*
  * Η συνάρτηση BF_Block_Init αρχικοποιεί και δεσμεύει την κατάλληλη μνήμη

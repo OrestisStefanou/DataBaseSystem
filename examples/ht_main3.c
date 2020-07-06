@@ -5,7 +5,7 @@
 #include "bf.h"
 #include "hash_file.h"
 
-#define RECORDS_NUM 1700 // you can change it if you want
+#define RECORDS_NUM 10000 // you can change it if you want
 #define FILE_NAME "data.db"
 
 const char* names[] = {
@@ -87,14 +87,27 @@ int main() {
 
   printf("RUN PrintAllEntries\n");
   int id = rand() % RECORDS_NUM;
-  //id=25;
-  CALL_OR_DIE(HT_PrintAllEntries(indexDesc, &id));
+  //id=2487;
   CALL_OR_DIE(HT_PrintAllEntries(indexDesc, NULL));
+  CALL_OR_DIE(HT_PrintAllEntries(indexDesc, &id));
 
   printf("Delete Entry with id = %d\n" ,id);
   CALL_OR_DIE(HT_DeleteEntry(indexDesc, id));
   printf("Print Entry with id = %d\n", id); 
   CALL_OR_DIE(HT_PrintAllEntries(indexDesc, &id)); // must print something like : Entry doesn't exist or nothing at all
+
+  id=2589;
+  printf("Print Entry with id = %d\n", id); 
+  CALL_OR_DIE(HT_PrintAllEntries(indexDesc, &id));
+  printf("Delete Entry with id = %d\n" ,id);
+  CALL_OR_DIE(HT_DeleteEntry(indexDesc, id));
+
+  id=3500;
+  printf("Print Entry with id = %d\n", id); 
+  CALL_OR_DIE(HT_PrintAllEntries(indexDesc, &id));
+  printf("Delete Entry with id = %d\n" ,id);
+  CALL_OR_DIE(HT_DeleteEntry(indexDesc, id));
+
 
   CALL_OR_DIE(HT_CloseFile(indexDesc));
   for (int i=0;i<MAX_OPEN_FILES;i++)

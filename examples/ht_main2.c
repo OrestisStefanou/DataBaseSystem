@@ -5,7 +5,7 @@
 #include "bf.h"
 #include "hash_file.h"
 
-#define RECORDS_NUM 1700 // you can change it if you want
+#define RECORDS_NUM 100 // you can change it if you want
 #define FILE_NAME "data.db"
 
 const char* names[] = {
@@ -87,7 +87,7 @@ int main() {
 
   printf("RUN PrintAllEntries\n");
   int id = rand() % RECORDS_NUM;
-  //id=25;
+  id=25;
   CALL_OR_DIE(HT_PrintAllEntries(indexDesc, &id));
   CALL_OR_DIE(HT_PrintAllEntries(indexDesc, NULL));
 
@@ -95,7 +95,11 @@ int main() {
   CALL_OR_DIE(HT_DeleteEntry(indexDesc, id));
   printf("Print Entry with id = %d\n", id); 
   CALL_OR_DIE(HT_PrintAllEntries(indexDesc, &id)); // must print something like : Entry doesn't exist or nothing at all
-
+  printf("Deleting first 20 entries\n");
+  for (int i=0;i<20;i++)
+    CALL_OR_DIE(HT_DeleteEntry(indexDesc,i));
+  printf("RUN PrintAllEntries\n");
+  CALL_OR_DIE(HT_PrintAllEntries(indexDesc, NULL));
   CALL_OR_DIE(HT_CloseFile(indexDesc));
   for (int i=0;i<MAX_OPEN_FILES;i++)
     free(information[i]);
